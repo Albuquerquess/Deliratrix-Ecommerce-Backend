@@ -34,17 +34,17 @@ class PixController {
             const charge = await api.put(`/v2/cob/${txid}`, dataCharge)
 
             
-            // if (!charge.status ==! 200) throw new PaymentCustomError({
-            //     errors: ["Não foi possivel criar a cobrança"]
-            // });
+            if (charge.status !== 200) throw new PaymentCustomError({
+                errors: ["Não foi possivel criar a cobrança"]
+            });
             
             const locID = charge.data?.loc.id
             
             const qrCode = await api.get(`/v2/loc/${locID}/qrcode`)
             
-            // if (!qrCode.status ==! 200) throw new PaymentCustomError({
-            //     errors: ["Não foi possivel crar o qrcode"]
-            // });
+            if (qrCode.status !== 200) throw new PaymentCustomError({
+                errors: ["Não foi possivel crar o qrcode"]
+            });
 
             return response.json({
                 chargeRaw: qrCode.data.qrcode,
