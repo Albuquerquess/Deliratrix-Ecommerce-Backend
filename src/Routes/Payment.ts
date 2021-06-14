@@ -6,6 +6,6 @@ const PixRoutes = express.Router()
 const pixController = new PixController()
 
 PixRoutes.get('/payment/pix/generate', pixController.generatePixPayment)
-PixRoutes.get('/payment/paid', pixController.Paid)
+PixRoutes.get('/paid', pixController.Paid)
 
 export default PixRoutes
