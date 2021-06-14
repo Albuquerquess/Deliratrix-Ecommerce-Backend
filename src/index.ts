@@ -4,7 +4,7 @@ import PaymentGNAPI from './Routes/Payment'
 
 // envs
 import dotenv from 'dotenv'
-dotenv.config()
+if (process.env.NODE_ENV === 'dev') dotenv.config()
 
 const app = express()
 

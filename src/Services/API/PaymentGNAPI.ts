@@ -7,6 +7,7 @@ dotenv.config()
 import { CONTENT_TYPE, CREDENTIALS } from '../../Consts/GNConsts'
 
 async function PaymentGNAPI() {
+
     const authToken = await axios({
         method: 'POST',
         url: `${process.env.GN_ENDPOINT}/oauth/token`,
@@ -19,7 +20,7 @@ async function PaymentGNAPI() {
             'grant_type': 'client_credentials'
         }
     })
-    
+     
     return axios.create({
         baseURL: process.env.GN_ENDPOINT,
         httpAgent: AGENT,
