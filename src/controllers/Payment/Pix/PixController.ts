@@ -6,7 +6,7 @@ import RandomTxid from "../../../utils/txidGenerator";
 import PaymentCustomError from '../../../Errors/handlePaymentError'
 
 class PixController {
-    // Resolver sobre tratamento de erros
+    // Usar wildcards para validar os dados de pagamento vindo do request em src/middleware/payment/paymentDataValidator.ts
     async generatePixPayment(request: Request, response: Response) {
         const cart: ChargeProps[] = request.body.cart
         const debtor: DebtorProps = request.body.debtor
@@ -33,8 +33,7 @@ class PixController {
         try {
             const charge = await api.put(`/v2/cob/${txid}`, dataCharge)
 
-            
-            if (charge.status !== 200) throw new PaymentCustomError({
+            if (!(charge.status === 200 || charge.status === 201)) throw new PaymentCustomError({
                 errors: ["Não foi possivel criar a cobrança"]
             });
             
@@ -42,7 +41,7 @@ class PixController {
             
             const qrCode = await api.get(`/v2/loc/${locID}/qrcode`)
             
-            if (qrCode.status !== 200) throw new PaymentCustomError({
+            if (!(qrCode.status === 200 || qrCode.status === 201)) throw new PaymentCustomError({
                 errors: ["Não foi possivel crar o qrcode"]
             });
 
@@ -51,9 +50,13 @@ class PixController {
                 qrcode: qrCode.data.imageQrcode
             })
         } catch (error) {
-            if (error instanceof PaymentCustomError) return response.status(400).json({name: error.name, errors: error.errors   })
+            if (error instanceof PaymentCustomError) {
+                console.log(error.stack)
 
-            console.log(error.response.status)
+                return response.status(400).json({name: error.name, errors: [error.errors] })
+            }
+
+            return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente'})
         }   
         
     }
