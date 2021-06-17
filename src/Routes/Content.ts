@@ -2,7 +2,7 @@ import express from "express";
 
 
 const ContentRoutes = express.Router()
-
+// Finalizar migratins
 ContentRoutes.get('/service/bests', () => {return ['Lista os 3 serviços com melhores avaliações']})
 ContentRoutes.get('/service', () => {return ['Lista os serviços ordenada com a data de criação']})
 ContentRoutes.get('/service:id', () => {return ['Lista os serviços de acordo com o seu id']})
