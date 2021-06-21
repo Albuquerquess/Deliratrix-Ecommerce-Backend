@@ -4,6 +4,7 @@ import PaymentGNAPI from './Routes/Payment'
 
 // envs
 import dotenv from 'dotenv'
+import ContentRoutes from './Routes/Content'
 if (process.env.NODE_ENV === 'dev') dotenv.config()
 
 const app = express()
@@ -13,9 +14,10 @@ app.use(express.json())
 
 app.use(PaymentGNAPI)
 // Routes
+app.use(ContentRoutes)
+
 app.get('/', (request, response) => {
-    const {id} = request.query
-    return response.send(id)
+    return response.send(`DeliraStore Server ${new Date().toLocaleString()}`)
 })
 
 app.listen(3333, () => {

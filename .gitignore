@@ -2,3 +2,10 @@ node_modules
 dist
 .env
 .vscode
+# .env
+.vscode
+
+# database
+*.sqlite
+
+tmp/
