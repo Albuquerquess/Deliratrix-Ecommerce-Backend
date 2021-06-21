@@ -3,7 +3,7 @@ import path from 'path';
 
 import { PRODUCSTDATABASENAME } from '../../../../Consts/DBConsts'
 
-const productConnection = knex({
+const productsConnection = knex({
   client: 'sqlite3',
   connection: {
     filename: path.resolve(__dirname, '..', '..', '..', 'DB', 'Content', PRODUCSTDATABASENAME)
@@ -11,4 +11,4 @@ const productConnection = knex({
   useNullAsDefault: true,
 });
 
-export default productConnection;
+export default productsConnection;

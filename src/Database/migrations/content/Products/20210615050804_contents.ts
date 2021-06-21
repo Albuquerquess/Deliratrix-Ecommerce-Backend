@@ -4,7 +4,7 @@ export async function up(knex: Knex): Promise<void> {
     return knex.schema.createTable('products', (table: Knex.TableBuilder) => {
         table.increments('id').primary()
         table.string('size').notNullable()
-        table.string('nameWithHash').notNullable()
+        table.string('filename').notNullable()
         table.string('url').notNullable()
         table.timestamp('registered_at').defaultTo(knex.fn.now())
     })
@@ -15,8 +15,8 @@ export async function up(knex: Knex): Promise<void> {
         table.string('category').notNullable()
         table.string('title').notNullable()
         table.string('desc').notNullable()
-        table.string('products_id').notNullable()
         table.string('product_id').notNullable()
+        table.integer('time').defaultTo(0)
         table.timestamp('registered_at').defaultTo(knex.fn.now())
 
         table.foreign('product_id').references('id').inTable('products')
