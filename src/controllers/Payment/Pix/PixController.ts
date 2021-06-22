@@ -62,7 +62,7 @@ class PixController {
         
     }
 
-    async saveData(request: Request, response: Response) {
+    async saveDataForPayment(request: Request, response: Response) {
         const { email, name, phone } = request.body
     }
 
