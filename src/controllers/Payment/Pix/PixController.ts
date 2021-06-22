@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
+import nodemailer from 'nodemailer'
+
 import PaymentGNAPI from '../../../Services/API/PaymentGNAPI'
 import { ChargeProps, DebtorProps } from '../../../@types/payment'
 import RandomTxid from "../../../utils/txidGenerator";
-
 import PaymentCustomError from '../../../Errors/handlePaymentError'
 
 class PixController {
@@ -61,7 +62,26 @@ class PixController {
         
     }
 
+    async saveData(request: Request, response: Response) {
+        const { email, name, phone } = request.body
+    }
+
     async Paid(request: Request, response: Response) {
+        const transporter = nodemailer.createTransport({
+            host: String(process.env.SMTP_SERVER),
+            port: String(process.env.SMTP_PORT),
+            auth: {
+                user: String(process.env.EMAIL_USER),
+                pass: String(process.env.EMAIL_PASSWD)
+            }
+        })
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: process.env.EMAIL_USER,
+            replyTo: 'albuquerque.develop@gmail.com',
+            subject: 'Titulo',
+            text: 'Texto'
+        })
         
         return response.send('200')
     }
