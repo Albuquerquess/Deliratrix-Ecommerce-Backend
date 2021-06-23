@@ -6,7 +6,7 @@
   "scripts": {
     "start": "nodemon src/index.ts",
     "knex:products": "knex migrate:latest --knexfile ./Knex/productsKnexFile.ts",
-    "knex:TMPInfos": "knex migrate:latest --knexfile ./Knex/TemporaryPaymentInformation.ts",
+    "knex:TMPInfos": "knex migrate:latest --knexfile ./Knex/temporaryPaymentInformation.ts",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports"
   },
   "keywords": [],
