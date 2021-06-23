@@ -6,7 +6,8 @@ export interface ChargeProps {
 
 export interface DebtorProps {
     name: string,
-    cpf: string,
+    email: string,
+    phone: string,
 }
 
 export interface ResponseChargeProps {
