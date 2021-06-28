@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/index.ts",
-    "knex:products": "knex migrate:latest --knexfile ./Knex/productsKnexFile.ts",
-    "knex:TMPInfos": "knex migrate:latest --knexfile ./Knex/temporaryPaymentInformation.ts",
+    "knex:ecommerce": "knex migrate:latest --knexfile ./Knex/contentKexfile.ts",
+    "knex:tmp": "knex migrate:latest --knexfile ./Knex/tmpKnexFile.ts",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports"
   },
   "keywords": [],
