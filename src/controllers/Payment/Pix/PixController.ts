@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import nodemailer from 'nodemailer'
 
-import { ChargeProps, DebtorProps } from '../../../@types/payment'
+import { ChargeProps, DebtorProps, WebhookProps } from '../../../@types/payment'
 import RandomTxid from "../../../utils/txidGenerator";
 
 import PaymentGNAPI from '../../../Services/API/PaymentGNAPI'
-import TmpPaymentConnection from "../../../Database/connections/payment/tmpPaymentConnection";
+import tmpConnection from "../../../Database/connections/payment/tmpConnection";
 
 import PaymentCustomError from '../../../Errors/handlePaymentError'
 
@@ -18,9 +18,12 @@ class PixController {
         const txid = RandomTxid()
         const api = await PaymentGNAPI()
         const fullValue = String((cart.reduce((full, item) => full + item.value, 0)).toFixed(2))
-        const a = {...debtor, txid}
         const note = cart.map((item, index) => {
-            return `${index} | id: ${item.id} - Nome: ${item.name} - Valor: R$:${item.value.toFixed(2)}`
+            return `${index} | id: ${item.id} - Nome: ${item.name} - Valor: R$:${item.value.toFixed(2)}\n`
+        })
+
+        const cartRef = cart.map((item, index) => {
+            return {id_content: item.id, name: item.name, value: item.value, txid}
         })
         
         const dataCharge = {
@@ -49,50 +52,91 @@ class PixController {
                 errors: ["Não foi possivel criar o qrcode."]
             });
 
-            // Adiciona o txId ao banco de dados de informações temporária, para assim, o envio do conteudo poderá ser feito mediante condição verdadeira do txid vindo do 
-            // webhook e o txid cadastrado no banco de dados temporário
-
-            const [TMPInfos] = await TmpPaymentConnection('TmpPaymentInfos')
+            // Salvando dados temporários de pagamento
+            const TMPInfos = await tmpConnection('payment')
                 .insert({...debtor, txid})
 
-            if (!TMPInfos) throw new PaymentCustomError({
+            if (!TMPInfos.length) throw new PaymentCustomError({
                 errors: ["Não foi possivel cadastrar os dados."]
+            });
+
+            // Salvando dados temporários do carrinho
+            const TMPCart = await tmpConnection('cart')
+                .insert(cartRef)
+
+            if (!TMPCart.length) throw new PaymentCustomError({
+            errors: ["Não foi possivel cadastrar os dados do carrinho."]
             });
 
             return response.json({
                 chargeRaw: qrCode.data.qrcode,
                 qrcode: qrCode.data.imageQrcode
             })
+            
         } catch (error) {
             if (error instanceof PaymentCustomError) {
-                console.log(error.stack)
+                console.log(error)
 
                 return response.status(400).json({name: error.name, errors: [error.errors] })
             }
-            console.log(error.stack)
+            console.log(error)
             return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente', error: error})
         }   
         
     }
-
+// Finalizar envio de emails
     async Paid(request: Request, response: Response) {
-        const transporter = nodemailer.createTransport({
-            host: String(process.env.SMTP_SERVER),
-            port: String(process.env.SMTP_PORT),
-            auth: {
-                user: String(process.env.EMAIL_USER),
-                pass: String(process.env.EMAIL_PASSWD)
-            }
-        })
-        await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: process.env.EMAIL_USER,
-            replyTo: 'albuquerque.develop@gmail.com',
-            subject: 'Titulo',
-            text: 'Texto'
-        })
-        
-        return response.send('200')
+        const pix: WebhookProps = request.body.pix[0]
+
+        if(pix) {
+            try {
+                const userInfos = await tmpConnection('payment')
+                .where('payment.txid', '=', String(pix.txid))
+                .select('*')
+    
+            
+                if (!userInfos.length) throw new PaymentCustomError({
+                    errors: ["Não foi possivel recuperar os seus dados, envie o comprovante de pagamento via pix para o suporte@delatrix.com"]
+                });
+
+
+                const transporterConfig = {
+                    host: process.env.SMTP_SERVER,
+                    port: process.env.SMTP_PORT,
+                    auth: {
+                      user: process.env.EMAIL_USER,
+                      pass: process.env.EMAIL_PASSWD,
+                    },
+                    tls: {
+                        rejectUnauthorized: false
+                    }
+                  }
+                let transporter = nodemailer.createTransport(transporterConfig);
+              
+                // send mail with defined transport object
+                let info = await transporter.sendMail({
+                  from: process.env.EMAIL_USER, // sender address
+                  to: userInfos[0].email, // list of receivers
+                  subject: "Hello ✔", // Subject line
+                  text: "Hello world?", // plain text body
+                  html: "<b>Hello world?</b>", // html body
+                });
+              
+                console.log("Message sent: %s", info.messageId);
+              
+                return response.status(200).send('Email enviado')
+            } catch (error) {
+                if (error instanceof PaymentCustomError) {
+                    console.log(error.stack)
+    
+                    return response.status(400).json({name: error.name, errors: [error.errors] })
+                }
+                console.log(error.stack)
+                return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente', error: error})
+            }    
+        }else {
+            return response.send('200')
+        }
     }
 }
 
