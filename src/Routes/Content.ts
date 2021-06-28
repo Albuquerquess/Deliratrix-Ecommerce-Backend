@@ -3,23 +3,18 @@ import multer from "multer";
 import multerconfig from "../Config/multerconfig";
 
 // Controller
-import ProductController from "../controllers/Content/productController";
-const productController = new ProductController();
+import ContentController from "../controllers/Content/contentController";
+const contentController = new ContentController();
 
 const ContentRoutes = express.Router()
-
-ContentRoutes.get('/service/bests', () => {return ['Lista os 3 serviços com melhores avaliações']})
-ContentRoutes.get('/service', () => {return ['Lista os serviços ordenada com a data de criação']})
-ContentRoutes.get('/service:id', () => {return ['Lista os serviços de acordo com o seu id']})
-
 // Content
-ContentRoutes.get('/product/', productController.index)
-ContentRoutes.get('/product/bests/', productController.bests)
-ContentRoutes.get('/product/category/', productController.indexOfCategory)
-ContentRoutes.get('/product/search', productController.search)
+ContentRoutes.get('/content/', contentController.index)
+ContentRoutes.get('/content/bests/', contentController.bests)
+ContentRoutes.get('/content/category/', contentController.indexOfCategory)
+ContentRoutes.get('/content/search', contentController.search)
 
-ContentRoutes.post('/product/create', multer(multerconfig).single('file'), productController.create)
-ContentRoutes.delete('/product/delete', productController.delete)
+ContentRoutes.post('/content/create', multer(multerconfig).single('file'), contentController.create)
+ContentRoutes.delete('/content/delete', contentController.delete)
 
 
 export default ContentRoutes
