@@ -72,7 +72,8 @@ class PixController {
 
             return response.json({
                 chargeRaw: qrCode.data.qrcode,
-                qrcode: qrCode.data.imagemQrcode
+                qrcode: qrCode.data.imagemQrcode,
+                txid: txid
             })
             
         } catch (error) {
@@ -117,11 +118,13 @@ class PixController {
               
                 // send mail with defined transport object
                 const info = await transporter.sendMail({
-                  from: process.env.EMAIL_USER, // sender address
+                  from: `DeliraStore - ${process.env.EMAIL_USER}`, // sender address
                   to: userInfos[0].email, // list of receivers
                   subject: "Hello ✔", // Subject line
-                  text: "Hello world?", // plain text body
-                  html: "<b>Hello world?</b>", // html body
+                  html: `
+                  <h1>DeliraStore</h1>
+                    <p>${JSON.stringify( userInfos[0], null, 2)}</p>
+                  `, // html body
                 });
               
                 console.log("Message sent: %s", info.messageId);
