@@ -15,14 +15,16 @@ class PixController {
         const cart: ChargeProps[] = request.body.cart
         const debtor: DebtorProps = request.body.debtor
         
+        const cardParse = JSON.parse(cart)
+
         const txid = RandomTxid()
         const api = await PaymentGNAPI()
-        const fullValue = String((cart.reduce((full, item) => full + item.value, 0)).toFixed(2))
-        const note = cart.map((item, index) => {
+        const fullValue = String((cardParse.reduce((full, item) => full + item.value, 0)).toFixed(2))
+        const note = cardParse.map((item, index) => {
             return `${index} | id: ${item.id} - Nome: ${item.name} - Valor: R$:${item.value.toFixed(2)}\n`
         })
 
-        const cartRef = cart.map((item, index) => {
+        const cartRef = cardParse.map((item, index) => {
             return {id_content: item.id, name: item.name, value: item.value, txid}
         })
         
@@ -70,7 +72,7 @@ class PixController {
 
             return response.json({
                 chargeRaw: qrCode.data.qrcode,
-                qrcode: qrCode.data.imageQrcode
+                qrcode: qrCode.data.imagemQrcode
             })
             
         } catch (error) {
@@ -111,10 +113,10 @@ class PixController {
                         rejectUnauthorized: false
                     }
                   }
-                let transporter = nodemailer.createTransport(transporterConfig);
+                const transporter = nodemailer.createTransport(transporterConfig);
               
                 // send mail with defined transport object
-                let info = await transporter.sendMail({
+                const info = await transporter.sendMail({
                   from: process.env.EMAIL_USER, // sender address
                   to: userInfos[0].email, // list of receivers
                   subject: "Hello ✔", // Subject line
