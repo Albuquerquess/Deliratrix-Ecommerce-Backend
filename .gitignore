@@ -1,8 +1,10 @@
+# node modules
 node_modules
+
+# dist
 dist
-.env
-.vscode
-# .env
+
+# vscode
 .vscode
 
 # database
@@ -10,3 +12,6 @@ dist
 
 # tmp uploads
 src/tmp
+
+# .env
+.env
