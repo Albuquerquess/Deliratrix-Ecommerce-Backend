@@ -13,5 +13,9 @@ dist
 # tmp uploads
 src/tmp
 
-# .env
-.env
+# env
+.env.development
+.env.production
+
+# sql
+*.sql
