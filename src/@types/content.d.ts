@@ -4,5 +4,10 @@ export interface CreateContentProps {
     title: string,
     desc: string,
     prices: object[],
+    rate: object
 }
 
+export interface SelectMultiplesIdsProps {
+    contentIds: number[],
+    priceIds: number[]
+}

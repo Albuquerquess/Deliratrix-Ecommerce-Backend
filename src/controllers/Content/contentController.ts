@@ -1,23 +1,52 @@
 import { Request, Response } from 'express'
-import aws from 'aws-sdk'
-import fs from 'fs'
-import path from 'path'
-import { promisify } from 'util'
+
 import contentConnection from '../../Database/connections/content/contentConnection'
 
-// @types
-import { CreateContentProps } from '../../@types/content'
-
+import orderByReferences from '../../utils/orderByReferences'
 class ProductController {
     async index(request: Request, response: Response) {
         const { type } = request.query
-
+        
         try {
             const content = await contentConnection('content')
-            .join('desc', 'desc.content_id', '=', 'content.id')
             .join('price', 'price.content_id', '=', 'content.id')
+            .join('desc', 'desc.content_id', '=', 'content.id')
             .join('rate', 'rate.content_id', '=', 'content.id')
             .where('desc.type', '=', String(type))
+            .groupBy('content.id')
+            .orderBy('rate.rate', 'asc')
+            .select(
+                'content.id',
+                'content.registered_at',
+                'content.url',
+                
+                'desc.type',
+                'desc.category',
+                'desc.title',
+                'desc.desc',
+
+                'rate.rate'
+                )
+                .select(
+                    'price.label'
+                )
+                .min('price.price as price')
+                
+                return response.status(200).json(content)
+        } catch (error) {
+            return response.status(500).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})
+        }
+    }
+    async show(request: Request, response: Response) {
+        const { id } = request.query
+
+        const trx = await contentConnection.transaction()
+
+        try {
+            const [content] = await trx('content')
+            .join('desc', 'desc.content_id', '=', 'content.id')
+            .join('rate', 'rate.content_id', '=', 'content.id')
+            .where('content.id', '=', String(id))
             .select(
                 'content.id',
                 'content.url',
@@ -27,15 +56,20 @@ class ProductController {
                 'desc.title',
                 'desc.desc',
                 'desc.time',
+                'desc.type',
+                'desc.category',
                 'desc.registered_at',
-                
-                'price.price',
-                'price.label',
-    
+
                 'rate.rate'
                 )
+            
+            const prices = await trx('price')
+                .where('price.content_id', '=', String(id))
+                .select('price.label', 'price.price', 'price.id')
 
-                return response.status(200).json(content)
+            await trx.commit()
+
+                return response.status(200).json({content, prices})
         } catch (error) {
             return response.status(500).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})
         }
@@ -45,27 +79,25 @@ class ProductController {
 
         try {
             const content = await contentConnection('content')
-            .join('desc', 'desc.content_id', '=', 'content.id')
             .join('price', 'price.content_id', '=', 'content.id')
+            .join('desc', 'desc.content_id', '=', 'content.id')
             .join('rate', 'rate.content_id', '=', 'content.id')
             .where('desc.type', '=', String(type))
             .where('desc.category', '=', String(category))
+            .groupBy('content.id')
+            .orderBy('rate.rate', 'asc')
             .select(
                 'content.id',
-                'content.url',
-                'content.filename',
                 'content.registered_at',
-
+                'desc.type',
+                'desc.category',
                 'desc.title',
-                'desc.desc',
-                'desc.time',
-                'desc.registered_at',
-                
-                'price.price',
-                'price.label',
-    
-                'rate.rate'
+                'desc.desc'
                 )
+                .select(
+                    'price.label'
+                    )
+                    .min('price.price as price')
 
                 return response.status(200).json(content)
         } catch (error) {
@@ -77,136 +109,73 @@ class ProductController {
         
         try {
             const bestsProducts = await contentConnection('content')
-            .join('desc', 'desc.content_id', '=', 'content.id')
             .join('price', 'price.content_id', '=', 'content.id')
+            .join('desc', 'desc.content_id', '=', 'content.id')
             .join('rate', 'rate.content_id', '=', 'content.id')
             .where('desc.type', '=', String(type))
-            .max('rate.rate')
+            .groupBy('content.id')
+            .orderBy('rate.rate', 'asc')
+            .limit(3)
             .select(
                 'content.id',
-                'content.url',
-                'content.filename',
                 'content.registered_at',
+                'content.url',
 
+                'desc.type',
+                'desc.category',
                 'desc.title',
                 'desc.desc',
-                'desc.time',
-                'desc.registered_at',
-                
-                'price.price',
-                'price.label',
-    
-                'rate.rate'
+
+                'rate.rate',
+                'price.label'
+
+
                 )
+                .min('price.price as price')
 
             return response.status(200).json(bestsProducts)
         } catch (error) {
             return response.status(500).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})
         }
-
-
     }
     async search(request: Request, response: Response) {
-        const {type, search} = request.query
+        const {search, orderBy} = request.query
+        console.log(orderBy)
+        console.log(orderByReferences[String(orderBy)][0], orderByReferences[String(orderBy)][1])
 
         try {
             const content = await contentConnection('content')
-        .join('desc', 'desc.content_id', '=', 'content.id')
-        .join('price', 'price.content_id', '=', 'content.id')
-        .join('rate', 'rate.content_id', '=', 'content.id')
-        .where('desc.type', '=', String(type))
-        .orWhere('desc.title', 'like', `%${String(search)}%`)
-        .orWhere('desc.desc', 'like', `%${String(search)}%`)
-        .select(
-            'content.id',
-            'content.url',
-            'content.filename',
-            'content.registered_at',
+            .join('price', 'price.content_id', '=', 'content.id')
+            .join('desc', 'desc.content_id', '=', 'content.id')
+            .join('rate', 'rate.content_id', '=', 'content.id')
+            .orWhere('desc.title', 'like', `%${String(search)}%`)
+            .orWhere('desc.desc', 'like', `%${String(search)}%`)
+            .orWhere('price.price', 'like', `%${String(search)}%`)
+            .groupBy('content.id')
+            .orderBy(orderByReferences[String(orderBy)][0], orderByReferences[String(orderBy)][1])
+            .select(
+                'content.id',
+                'content.registered_at',
+                'content.url',
+                
+                'desc.type',
+                'desc.category',
+                'desc.title',
+                'desc.desc',
 
-            'desc.title',
-            'desc.desc',
-            'desc.time',
-            'desc.registered_at',
-            
-            'price.price',
-            'price.label',
+                'rate.rate'
+                )
+                .select(
+                    'price.label'
+                )
+                .min('price.price as price')
 
-            'rate.rate'
-            )
             return response.status(200).json(content)
         } catch (error) {
             return response.status(500).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})            
         }
     }
-    async create(request: Request, response: Response) {
-        // Time in seconds
-        const { size, key: filename, location: url="" } = request.file
-        const { type, category, title, desc, prices }: CreateContentProps = request.query
-        const pricesParse = JSON.parse(prices)
-        
-        const trx = await contentConnection.transaction()
 
-        try {
-            
-            const [registerProduct] = await trx('content')
-            .insert({
-                size,
-                filename,
-                url
-                }
-            )
-            
-            const pricesRef = pricesParse.map(price => { 
-                return {...price, 'content_id': 0}
-            })
-
-        await trx('desc')
-            .insert({
-                type,
-                category,
-                title,
-                desc,
-                'content_id': registerProduct
-            })
-        await trx('price')
-            .insert(pricesRef)
-
-            await trx.commit()
-            return response.status(200).json({a: 0})
-        } catch (error) {
-            return response.status(500).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})
-        } finally {
-            trx.commit()
-        }
-        
-    }
-    async delete(request: Request, response: Response) {
-        const {filename}  = request.query
-       
-        try {
-            if (process.env.STORAGE_TYPE === 's3') {
-                const s3 = new aws.S3()
-    
-                await s3.deleteObject({
-                    Bucket: process.env.AWS_BUCKET_NAME,
-                    Key: `${filename}`
-                }).promise()
-    
-                return response.status(204).send()
-            }else if(process.env.STORAGE_TYPE === 'local'){
-
-                promisify(fs.unlink)(path.resolve(__dirname, '..', '..', 'tmp', 'uploads', `${filename}`))
-                console.log('deleted')
-                return response.status(204).send()
-            }
-        } catch (error) {
-            return response.status(409).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})
-        }
-        return response.status(500).send({error: true, message: 'Ocorreu um erro, por favor tente novamente'})
-        
-
-
-    }
 }
 
 export default ProductController
