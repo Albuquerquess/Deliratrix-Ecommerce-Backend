@@ -1,43 +1,49 @@
 import { Request, Response } from "express";
 import nodemailer from 'nodemailer'
 
-import { ChargeProps, DebtorProps, WebhookProps } from '../../../@types/payment'
+import { CartProps, DebtorProps, WebhookProps } from '../../../@types/payment'
 import RandomTxid from "../../../utils/txidGenerator";
 
 import PaymentGNAPI from '../../../Services/API/PaymentGNAPI'
 import tmpConnection from "../../../Database/connections/payment/tmpConnection";
+import contentConnection from '../../../Database/connections/content/contentConnection'
 
 import PaymentCustomError from '../../../Errors/handlePaymentError'
 
 class PixController {
     // Usar wildcards para validar os dados de pagamento vindo do request em src/middleware/payment/paymentDataValidator.ts
     async generatePixPayment(request: Request, response: Response) {
-        const cart: ChargeProps[] = request.body.cart
+        const cart: CartProps = request.body.cart
         const debtor: DebtorProps = request.body.debtor
-        
-        const cardParse = JSON.parse(cart)
 
+        const cartContents = cart.contents
+        const cartPrices = cart.prices
+        
         const txid = RandomTxid()
         const api = await PaymentGNAPI()
-        const fullValue = String((cardParse.reduce((full, item) => full + item.value, 0)).toFixed(2))
-        const note = cardParse.map((item, index) => {
-            return `${index} | id: ${item.id} - Nome: ${item.name} - Valor: R$:${item.value.toFixed(2)}\n`
-        })
+        const tmpTrx = await tmpConnection.transaction()
+        
+        const cartContentsRef = cartContents.map(content => {return {...content, txid}})
+        const contentIds = cartContentsRef.map(content => content.id)
+        const priceIds = cartPrices.map(price => price.id)
 
-        const cartRef = cardParse.map((item, index) => {
-            return {id_content: item.id, name: item.name, value: item.value, txid}
-        })
+        const [price] = await contentConnection('price')
+        .whereIn('price.id', priceIds)
+        .select('price.price')
+
+        const finalPrice = price.price
+              
         
         const dataCharge = {
-            calendario: {
-                expiracao: 3600
+            "calendario": {
+              "expiracao": 3600
             },
-            valor: {
-                original: fullValue
+            "valor": {
+              "original": finalPrice.toFixed(2)
             },
-            chave: process.env.GN_PIX_KEY,
-            // solicitacaoPagador: `${note}, Total: R$:${fullValue}\n\n Comprador: ${debtor.name}, ${debtor.email}, ${debtor.phone}`
-        }
+            "chave": process.env.GN_PIX_KEY,
+            "solicitacaoPagador": "Informe o número ou identificador do pedido."
+          }
         
         try {
             const charge = await api.put(`/v2/cob/${txid}`, dataCharge)
@@ -55,20 +61,33 @@ class PixController {
             });
 
             // Salvando dados temporários de pagamento
-            const TMPInfos = await tmpConnection('payment')
+            const TMPDebtor = await tmpTrx('tmp_debtor')
                 .insert({...debtor, txid})
 
-            if (!TMPInfos.length) throw new PaymentCustomError({
-                errors: ["Não foi possivel cadastrar os dados."]
-            });
-
-            // Salvando dados temporários do carrinho
-            const TMPCart = await tmpConnection('cart')
-                .insert(cartRef)
-
-            if (!TMPCart.length) throw new PaymentCustomError({
+            if (!TMPDebtor.length) throw new PaymentCustomError({
             errors: ["Não foi possivel cadastrar os dados do carrinho."]
             });
+
+            const contents = await contentConnection('content')
+            .join('price', 'price.content_id', '=', 'content.id')
+            .whereIn('content.id', contentIds)
+            .whereIn('price.id', priceIds)
+            .select(
+                'price.price',
+                'price.content_id')
+
+            const contentsRef = contents.map(content => {
+                return {...content, txid, debtor_id: TMPDebtor[0]}
+            })
+
+            const TMPCart = await tmpTrx('tmp_cart')
+            .insert(contentsRef)
+
+            if (!TMPCart.length) throw new PaymentCustomError({
+                errors: ["Não foi possivel cadastrar os dados do carrinho."]
+                });
+
+                console.log('Pagamento cadastrado com txid: '+txid)
 
             return response.json({
                 chargeRaw: qrCode.data.qrcode,
@@ -78,13 +97,14 @@ class PixController {
             
         } catch (error) {
             if (error instanceof PaymentCustomError) {
-                console.log(error)
 
                 return response.status(400).json({name: error.name, errors: [error.errors] })
             }
             console.log(error)
             return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente', error: error})
-        }   
+        }finally {
+            tmpTrx.commit()
+        }
         
     }
 // Finalizar envio de emails
