@@ -1,6 +1,6 @@
 import express from 'express'
 import cors from 'cors'
-
+import path from 'path'
 // envs
 import dotenv from 'dotenv'
 
@@ -8,6 +8,7 @@ import dotenv from 'dotenv'
 import ContentRoutes from './Routes/Content'
 import AdminRoutes from './Routes/Admin'
 import PaymentGNAPI from './Routes/Payment'
+
 if (process.env.NODE_ENV === 'dev') dotenv.config()
 
 const app = express()

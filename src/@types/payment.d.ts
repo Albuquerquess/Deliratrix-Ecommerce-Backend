@@ -37,11 +37,3 @@ export interface PaymentCustomErrorProps extends Error{
     super()
     errors: string[]
 }
-
-export interface WebhookProps {
-    endToEndId: string;
-    txid: string;
-    chave: string;
-    valor: string;
-    horario: string;
-}

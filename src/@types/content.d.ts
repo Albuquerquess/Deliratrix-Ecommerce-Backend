@@ -4,7 +4,8 @@ export interface CreateContentProps {
     title: string,
     desc: string,
     prices: object[],
-    rate: object
+    rate: object,
+    finalContentUrl: string,
 }
 
 export interface SelectMultiplesIdsProps {

@@ -1,22 +1,24 @@
+import aws from 'aws-sdk'
 import { Request, Response } from 'express'
-
-import aws, { Textract } from 'aws-sdk'
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
-
+import { WebhookProps } from '../../@types/Admin'
 // @types
 import { CreateContentProps, SelectMultiplesIdsProps } from '../../@types/content'
-
 // connection
 import contentConnection from '../../Database/connections/content/contentConnection'
-
+import tmpConnection from "../../Database/connections/payment/tmpConnection"
+import finalContentConnection from '../../Database/connections/finalContent/finalContentConnection'
+// errors
+import PaymentCustomError from '../../Errors/handlePaymentError'
+// email
+import sendMail from '../../Services/SendMail'
 class AdminController {
     async indexAllCategories(request: Request, response: Response) {
         const { type } = request.query
         
         try {
-            
             const categories = await contentConnection('desc')
                 .where('type', '=', String(type))
                 .count('category', {as: 'qtd'})
@@ -48,7 +50,6 @@ class AdminController {
                 error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})        
         }
     }
-
     async indexMultipleContentAndPricesById(request: Request, response: Response) {
         const { contentIds, priceIds }: SelectMultiplesIdsProps = request.query
         
@@ -95,8 +96,8 @@ class AdminController {
     async create(request: Request, response: Response) {
         // Time in seconds
         const { size, key: filename, location: url="" } = request.file
-        const { type, category, title, desc, prices, rate }: CreateContentProps = request.query
-        const pricesParse = JSON.parse(prices)
+        const { type, category, title, desc, prices, rate=0, finalContentUrl }: CreateContentProps = request.query
+        const pricesParse = [JSON.parse(prices)]
         const trx = await contentConnection.transaction()
         
         try {
@@ -114,27 +115,33 @@ class AdminController {
                 content_id: registerProduct,
             }
 
-        const pricesRef = pricesParse.map(price => { 
-            return {...price, 'content_id': registerProduct}
-        })
-            
-
-        await trx('desc')
-            .insert({
-                type,
-                category,
-                title,
-                desc,
-                'content_id': registerProduct
+            const pricesRef = pricesParse.map(price => { 
+                return {...price, 'content_id': registerProduct}
             })
-        await trx('price')
-            .insert(pricesRef)
-        
-        await trx('rate')
-            .insert(rateRef)
+                
 
-            await trx.commit()
-            return response.status(200).json({id: registerProduct})
+            await trx('desc')
+                .insert({
+                    type,
+                    category,
+                    title,
+                    desc,
+                    'content_id': registerProduct
+                })
+            await trx('price')
+                .insert(pricesRef)
+            
+            await trx('rate')
+                .insert(rateRef)
+            
+            if (registerProduct) {
+                await finalContentConnection('final_content')
+                .insert({
+                    'create_id': registerProduct,
+                    'url': finalContentUrl
+                })
+            }
+                return response.status(200).json({id: registerProduct})
         
         } catch (error) {
             return response.status(500).json({
@@ -203,6 +210,44 @@ class AdminController {
 
 
     }
+    async Paid(request: Request, response: Response) {
+        const pix: WebhookProps = request.body.pix[0]
+        
+
+        if(pix) {
+            try {
+                const debtor: {name: string, phone: string, email: string, txid: string} = 
+                await tmpConnection('tmp_debtor')
+                    .where('txid', '=', pix.txid)
+                    .select('name', 'phone', 'email', 'txid')
+
+                const contents = await tmpConnection('tmp_cart')
+                    .where('txid', '=', pix.txid)
+                    .select('content_id', 'price', 'txid')
+
+                const contentIds = contents.map(content => content.content_id)
+
+                const finalContentsUrl = await finalContentConnection('final_content')
+                    .whereIn('create_id', contentIds)
+                    .select('create_id', 'url')
+
+                    const send = await sendMail(debtor, finalContentsUrl, contents)
+
+                    return response.status(204).send()
+                
+            } catch (error) {
+                if (error instanceof PaymentCustomError) {
+                    console.log(error.stack)
+
+                    return response.status(400).json({name: error.name, errors: [error.errors] })
+                }
+                console.log(error.stack)
+                return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente', error: error})
+            }    
+        }else {
+            return response.send('200')
+        
+        }    }
 }
 
 export default AdminController

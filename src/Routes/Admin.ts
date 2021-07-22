@@ -16,4 +16,8 @@ AdminRoutes.post('/content/create', multer(multerconfig).single('file'), adminCo
 
 AdminRoutes.delete('/content/delete', adminController.delete)
 
+// webhoox
+AdminRoutes.post('/paid(/pix)?', adminController.Paid)
+
+
 export default AdminRoutes

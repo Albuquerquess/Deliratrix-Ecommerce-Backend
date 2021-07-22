@@ -5,8 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/index.ts",
-    "knex:ecommerce": "knex migrate:latest --knexfile ./Knex/contentKexfile.ts",
+    "knex:ecommerce": "knex migrate:latest --knexfile ./Knex/contentKnexfile.ts",
     "knex:tmp": "knex migrate:latest --knexfile ./Knex/tmpKnexFile.ts",
+    "knex:final": "knex migrate:latest --knexfile ./Knex/finalContentKnexfile.ts",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports"
   },
   "keywords": [],
@@ -23,7 +24,7 @@
     "@types/knex": "^0.16.1",
     "@types/multer": "^1.4.5",
     "@types/multer-s3": "^2.7.9",
-    "@types/nodemailer": "^6.4.2",
+    "@types/nodemailer": "^6.4.4",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
     "eslint": "^6.8.0",
@@ -38,9 +39,9 @@
     "nodemon": "^2.0.2",
     "npm": "^7.17.0",
     "prettier": "^2.0.2",
+    "sqlite3": "^5.0.2",
     "sucrase": "^3.12.1",
-    "typescript": "^3.8.3",
-    "sqlite3": "^5.0.2"
+    "typescript": "^3.8.3"
   },
   "dependencies": {
     "@types/sqlite3": "^3.1.7",
@@ -54,6 +55,6 @@
     "knex": "^0.95.6",
     "multer": "^1.4.2",
     "multer-s3": "^2.9.0",
-    "nodemailer": "^6.6.2"
+    "nodemailer": "^6.6.3"
   }
 }

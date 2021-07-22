@@ -1,15 +1,10 @@
 import { Request, Response } from "express";
-import nodemailer from 'nodemailer'
-
-import { CartProps, DebtorProps, WebhookProps } from '../../../@types/payment'
-import RandomTxid from "../../../utils/txidGenerator";
-
-import PaymentGNAPI from '../../../Services/API/PaymentGNAPI'
+import { CartProps, DebtorProps } from '../../../@types/payment';
+import contentConnection from '../../../Database/connections/content/contentConnection';
 import tmpConnection from "../../../Database/connections/payment/tmpConnection";
-import contentConnection from '../../../Database/connections/content/contentConnection'
-
-import PaymentCustomError from '../../../Errors/handlePaymentError'
-
+import PaymentCustomError from '../../../Errors/handlePaymentError';
+import PaymentGNAPI from '../../../Services/API/PaymentGNAPI';
+import RandomTxid from "../../../utils/txidGenerator";
 class PixController {
     // Usar wildcards para validar os dados de pagamento vindo do request em src/middleware/payment/paymentDataValidator.ts
     async generatePixPayment(request: Request, response: Response) {
@@ -108,61 +103,7 @@ class PixController {
         
     }
 // Finalizar envio de emails
-    async Paid(request: Request, response: Response) {
-        const pix: WebhookProps = request.body.pix[0]
 
-        if(pix) {
-            try {
-                const userInfos = await tmpConnection('payment')
-                .where('payment.txid', '=', String(pix.txid))
-                .select('*')
-    
-            
-                if (!userInfos.length) throw new PaymentCustomError({
-                    errors: ["Não foi possivel recuperar os seus dados, envie o comprovante de pagamento via pix para o suporte@delatrix.com"]
-                });
-
-
-                const transporterConfig = {
-                    host: process.env.SMTP_SERVER,
-                    port: process.env.SMTP_PORT,
-                    auth: {
-                      user: process.env.EMAIL_USER,
-                      pass: process.env.EMAIL_PASSWD,
-                    },
-                    tls: {
-                        rejectUnauthorized: false
-                    }
-                  }
-                const transporter = nodemailer.createTransport(transporterConfig);
-              
-                // send mail with defined transport object
-                const info = await transporter.sendMail({
-                  from: `DeliraStore - ${process.env.EMAIL_USER}`, // sender address
-                  to: userInfos[0].email, // list of receivers
-                  subject: "Hello ✔", // Subject line
-                  html: `
-                  <h1>DeliraStore</h1>
-                    <p>${JSON.stringify( userInfos[0], null, 2)}</p>
-                  `, // html body
-                });
-              
-                console.log("Message sent: %s", info.messageId);
-              
-                return response.status(200).send('Email enviado')
-            } catch (error) {
-                if (error instanceof PaymentCustomError) {
-                    console.log(error.stack)
-    
-                    return response.status(400).json({name: error.name, errors: [error.errors] })
-                }
-                console.log(error.stack)
-                return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente', error: error})
-            }    
-        }else {
-            return response.send('200')
-        }
-    }
 }
 
 export default PixController
