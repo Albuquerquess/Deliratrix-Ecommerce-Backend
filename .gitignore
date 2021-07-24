@@ -1,7 +1,20 @@
+# node modules
 node_modules
+
+# dist
 dist
-.env
+
+# vscode
 .vscode
-src/tmp/uploads/*
-*.sql
+
+# database
 *.sqlite
+
+# tmp uploads
+src/tmp
+
+# env
+.env
+
+# sql
+*.sql

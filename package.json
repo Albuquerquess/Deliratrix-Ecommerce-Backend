@@ -5,18 +5,28 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/index.ts",
+    "knex:ecommerce": "knex migrate:latest --knexfile ./Knex/contentKnexfile.ts",
+    "knex:tmp": "knex migrate:latest --knexfile ./Knex/tmpKnexFile.ts",
+    "knex:final": "knex migrate:latest --knexfile ./Knex/finalContentKnexfile.ts",
+    "knex:admin": "knex migrate:latest --knexfile ./Knex/adminKnexfile.ts",
+    "seed:admin": "npx knex seed:run --knexfile ./Knex/adminKnexfile.ts",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/aws-sdk": "^2.7.0",
     "@types/axios": "^0.14.0",
     "@types/bluebird": "^3.5.35",
     "@types/cors": "^2.8.10",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^4.17.12",
+    "@types/express-validator": "^3.0.0",
     "@types/knex": "^0.16.1",
+    "@types/multer": "^1.4.5",
+    "@types/multer-s3": "^2.7.9",
+    "@types/nodemailer": "^6.4.4",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
     "eslint": "^6.8.0",
@@ -27,17 +37,26 @@
     "eslint-plugin-prettier": "^3.1.2",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
+    "install": "^0.13.0",
     "nodemon": "^2.0.2",
+    "npm": "^7.17.0",
     "prettier": "^2.0.2",
+    "sqlite3": "^5.0.2",
     "sucrase": "^3.12.1",
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@types/sqlite3": "^3.1.7",
+    "aws-sdk": "^2.930.0",
     "axios": "^0.21.1",
     "bluebird": "^3.7.2",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
-    "knex": "^0.95.6"
+    "express-validator": "^6.12.0",
+    "knex": "^0.95.6",
+    "multer": "^1.4.2",
+    "multer-s3": "^2.9.0",
+    "nodemailer": "^6.6.3"
   }
 }

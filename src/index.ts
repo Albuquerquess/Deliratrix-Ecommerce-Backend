@@ -1,21 +1,28 @@
 import express from 'express'
 import cors from 'cors'
-import PaymentGNAPI from './Routes/Payment'
-
+import path from 'path'
 // envs
 import dotenv from 'dotenv'
-dotenv.config()
+
+// routes
+import ContentRoutes from './Routes/Content'
+import AdminRoutes from './Routes/Admin'
+import PaymentGNAPI from './Routes/Payment'
+
+if (process.env.NODE_ENV === 'dev') dotenv.config()
 
 const app = express()
 
 app.use(cors())
 app.use(express.json())
 
-app.use(PaymentGNAPI)
 // Routes
+app.use(PaymentGNAPI)
+app.use(ContentRoutes)
+app.use(AdminRoutes)
+
 app.get('/', (request, response) => {
-    const {id} = request.query
-    return response.send(id)
+    return response.send(`DeliraStore Server ${new Date().toLocaleString()}`)
 })
 
 app.listen(3333, () => {
