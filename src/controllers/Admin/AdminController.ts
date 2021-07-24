@@ -3,23 +3,27 @@ import { Request, Response } from 'express'
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
-import { WebhookProps } from '../../@types/Admin'
 // @types
+import { WebhookProps } from '../../@types/Admin'
 import { CreateContentProps, SelectMultiplesIdsProps } from '../../@types/content'
 // connection
 import contentConnection from '../../Database/connections/content/contentConnection'
 import tmpConnection from "../../Database/connections/payment/tmpConnection"
 import finalContentConnection from '../../Database/connections/finalContent/finalContentConnection'
+import adminConnection from '../../Database/connections/Admin/adminConnection'
+
 // errors
 import PaymentCustomError from '../../Errors/handlePaymentError'
 // email
 import sendMail from '../../Services/SendMail'
+
+import txidGenerator from '../../utils/txidGenerator'
 class AdminController {
     async indexAllCategories(request: Request, response: Response) {
         const { type } = request.query
         
         try {
-            const categories = await contentConnection('desc')
+            const categories = await adminConnection('typesAndCategories')
                 .where('type', '=', String(type))
                 .count('category', {as: 'qtd'})
                 .groupBy('category')
@@ -33,10 +37,8 @@ class AdminController {
                 error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})        
         }
     }
-    async indexAllTypes(request: Request, response: Response) {
-        
+    async indexAllTypes(request: Request, response: Response) {    
         try {
-            
             const types = await contentConnection('desc')
                 .groupBy('type')
                 .count('type', {as: 'qtd'})
@@ -92,7 +94,22 @@ class AdminController {
         }
         
     }
+    async indexAllTitlesAndIds(request: Request, response: Response) {
+        try {
+            const titles = await contentConnection('content')
+            .join('desc', 'desc.content_id', '=', 'content.id')
+            .select(
+                'desc.title',
+                'content.id'
+                )
+            return response.status(200).json(titles)
+            
+        } catch (error) {
+            return response.status(500).json({error: true, message: 'INTERNAL ERROR', errorMessage: error.message, errorName: error.name})
+        }
 
+
+    }
     async create(request: Request, response: Response) {
         // Time in seconds
         const { size, key: filename, location: url="" } = request.file
@@ -140,6 +157,9 @@ class AdminController {
                     'create_id': registerProduct,
                     'url': finalContentUrl
                 })
+
+                await adminConnection('typesAndCategories')
+                    .insert({type, category})
             }
                 return response.status(200).json({id: registerProduct})
         
@@ -157,11 +177,12 @@ class AdminController {
 
         const trx = await contentConnection.transaction()
 
-        const [{filename}] = await trx('content')
+        const [content] = await trx('content')
             .where('content.id', '=', String(id))
-            .select('content.filename')
-       
-        if (filename) {
+            .select()
+       console.log({content})
+        if (content) {
+            const filename = content.filename
             try {
                 if (process.env.STORAGE_TYPE === 's3') {
                     const s3 = new aws.S3()
@@ -188,32 +209,45 @@ class AdminController {
                     await trx('rate')
                         .where('rate.content_id', '=', String(id))
                         .delete()
-        
+
+                    await finalContentConnection('final_content')
+                        .where('final_content.create_id', '=', String(id))
+                        .delete()
+
+                    await adminConnection('bestSeller')
+                        .where('bestSeller.content_id', '=', String(id))
+                        .delete()
+                    console.log('Delete content with content.id: '+id)
                     return response.status(204).send()
                 }else if(process.env.STORAGE_TYPE === 'local'){
     
                     promisify(fs.unlink)(path.resolve(__dirname, '..', '..', 'tmp', 'uploads', `${filename}`))
-                    console.log('deleted')
+                    console.log('Delete local content with content.id: '+id)
                     return response.status(204).send()
+
                 }
             } catch (error) {
-                console.log(error)
-                return response.status(409).json({error: true, message: 'Ocorreu um erro, por favor tente novamente', errorMessage: error.message, errorName: error.name})
+                console.log('Not delete content 409 CONFLICT content.id: '+id)
+
+                return response.status(409).json({error: true, message: '409 CONFLICT', errorMessage: error.message, errorName: error.name})
             }finally {
                 await trx.commit()
             }
         }else {
-            return response.status(404).send({error: true, message: 'Não foi possivel encontrar o conteúdo'})    
+            console.log('Not delete content 404 NOT FOUND content.id: '+id)
+            await trx.commit()
+
+            return response.status(404).send({error: true, message: 'NOT FOUND'})    
+
         }
-        return response.status(500).send({error: true, message: 'Ocorreu um erro, por favor tente novamente'})
+        console.log('Not delete content 500 INTERNAL ERROR content.id: '+id)
+        return response.status(500).send({error: true, message: 'INTERNAL ERROR'})
         
 
 
     }
     async Paid(request: Request, response: Response) {
         const pix: WebhookProps = request.body.pix[0]
-        
-
         if(pix) {
             try {
                 const debtor: {name: string, phone: string, email: string, txid: string} = 
@@ -248,6 +282,11 @@ class AdminController {
             return response.send('200')
         
         }    }
+
+    async uuidGenerate(request: Request, response: Response) {
+        return response.status(200).send(txidGenerator())
+        // enviar por email
+    }
 }
 
 export default AdminController

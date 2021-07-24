@@ -8,6 +8,8 @@
     "knex:ecommerce": "knex migrate:latest --knexfile ./Knex/contentKnexfile.ts",
     "knex:tmp": "knex migrate:latest --knexfile ./Knex/tmpKnexFile.ts",
     "knex:final": "knex migrate:latest --knexfile ./Knex/finalContentKnexfile.ts",
+    "knex:admin": "knex migrate:latest --knexfile ./Knex/adminKnexfile.ts",
+    "seed:admin": "npx knex seed:run --knexfile ./Knex/adminKnexfile.ts",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports"
   },
   "keywords": [],
