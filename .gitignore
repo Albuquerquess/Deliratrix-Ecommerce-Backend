@@ -3,3 +3,5 @@ dist
 .env
 .vscode
 src/tmp/uploads/*
+*.sql
+*.sqlite
