@@ -10,7 +10,7 @@
     "knex:final": "knex migrate:latest --knexfile ./Knex/finalContentKnexfile.ts",
     "knex:admin": "knex migrate:latest --knexfile ./Knex/adminKnexfile.ts",
     "seed:admin": "npx knex seed:run --knexfile ./Knex/adminKnexfile.ts",
-    "build": "sucrase ./src -d ./dist --transforms typescript,imports"
+    "build": "sucrase ./src -d ./dist --transforms typescript,imports cp .env ./dist/"
   },
   "keywords": [],
   "author": "",
