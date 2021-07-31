@@ -1,7 +1,7 @@
 import express from "express";
 
 // Controller
-import ContentController from "../controllers/Content/contentController";
+import ContentController from "../Controllers/Content/contentController";
 const contentController = new ContentController();
 
 const ContentRoutes = express.Router()

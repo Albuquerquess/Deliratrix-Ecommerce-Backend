@@ -3,7 +3,7 @@ import multer from "multer";
 import multerconfig from "../Config/multerconfig";
 
 // Controller
-import AdminController from "../controllers/Admin/AdminController";
+import AdminController from "../Controllers/Admin/AdminController";
 const adminController = new AdminController();
 
 const AdminRoutes = express.Router()

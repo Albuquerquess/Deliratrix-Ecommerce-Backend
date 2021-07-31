@@ -17,7 +17,7 @@ import PaymentCustomError from '../../Errors/handlePaymentError'
 // email
 import sendMail from '../../Services/SendMail'
 
-import txidGenerator from '../../utils/txidGenerator'
+import txidGenerator from '../../Utils/txidGenerator'
 class AdminController {
     async indexAllCategories(request: Request, response: Response) {
         const { type } = request.query
