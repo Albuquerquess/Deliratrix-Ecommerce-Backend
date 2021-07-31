@@ -25,8 +25,8 @@ app.get('/', (request, response) => {
     return response.send(`DeliraStore Server ${new Date().toLocaleString()}`)
 })
 
-app.listen(3333, () => {
-    return console.log('Rodando -- http://localhost:3333/')
+app.listen(process.env.PORT || 3333, () => {
+    return console.log('Rodando -- http://localhost:'+(process.env.PORT || 3333))
 })
 
 // Criar um arquivo de rotas para cada tipo de requisição (produto, pagamento, clientes...)
