@@ -8,7 +8,12 @@ export interface CreateContentProps {
     finalContentUrl: string,
 }
 
+interface prices {
+    price: number;
+    label: string;
+}
+
 export interface SelectMultiplesIdsProps {
     contentIds: number[],
-    priceIds: number[]
+    priceIds: prices[]
 }
