@@ -28,6 +28,3 @@ app.get('/', (request, response) => {
 app.listen(process.env.PORT || 3333, () => {
     return console.log('Rodando -- http://localhost:'+(process.env.PORT || 3333))
 })
-
-// Criar um arquivo de rotas para cada tipo de requisição (produto, pagamento, clientes...)
-// implementar pagamento por PIX
