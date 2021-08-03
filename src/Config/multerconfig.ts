@@ -1,11 +1,10 @@
-import { Request } from 'express'
-import { RequestFile } from '../@types/req.file';
+import aws from 'aws-sdk';
+import dotenv from 'dotenv';
+import { Request } from 'express';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
-import aws from 'aws-sdk';
 import path from 'path';
 import RandomTxid from '../Utils/txidGenerator';
-import dotenv from 'dotenv'
 dotenv.config()
 
 const storageTypes = {
