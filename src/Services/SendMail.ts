@@ -1,27 +1,48 @@
 import nodemailer from 'nodemailer';
-import { createFalse } from 'typescript';
+//types
 import { debtorProps, finalContentsUrlProps, contentProps } from '../@types/sendMail'
 
+
 async function sendMail(debtor: debtorProps, finalContentsUrl: finalContentsUrlProps[], contents: contentProps[]) {
-  
+  const debtorMail = debtor[0].email
+  const debtorPhone = debtor[0].phone
+  const debtorName = debtor[0].name
+
+
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_SERVER,
-        port: Number(process.env.SMTP_PORT),
-        secure: false,
+        port: process.env.SMTP_PORT,
+        secure: false, // true for 465, false for other ports
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWD,
+          pass: process.env.SMTP_PASSWD, 
         },
       })
 
       const info = await transporter.sendMail({
-        from: process.env.SMTP_USER, // sender address
-        to: process.env.SMTP_USER, // list of receivers
-        subject: "Hello ✔", // Subject line
-        html: `<b>oi</b>`, // html body
+        from: 'servicos@albuquerquedev.com.br', // sender address
+        to: `${debtorMail} albuquerque.develop@gmail.com`, // list of receivers
+        subject: "Deliratrix - Envio de conteúdos", // Subject line
+        html:  `<div class="wrapper">
+        <header>
+          <h1>Olá, ${debtorName}. - deliratrix.com.br</h1>
+          <h3>Email automático </h3>
+        </header>
+    
+       <main>
+         <span><strong>Dados do comprador</strong></span>
+         <ul>
+           <li>Nome: ${debtorName}</li>
+           <li>Número: ${debtorPhone}</li>
+           <li>Email: ${debtorMail}</li>
+         </ul>
+         <span><strong>Link com os conteúdos</strong></span>
+         <ul>
+           ${finalContentsUrl.map(finalContentUrl => `<li>Titulo 03: <a href="${finalContentUrl.url}">Acessar conteúdo</a> ID: ${finalContentUrl.create_id}</li>`)}
+         </ul>
+       </main>
+      </div>`, // html body
       });
-
-      console.log("Message sent: %s", info.messageId);
 
       return info
 

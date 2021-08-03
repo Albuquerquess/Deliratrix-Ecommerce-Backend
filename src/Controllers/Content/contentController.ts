@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 
 import contentConnection from '../../Database/connections/content/contentConnection'
 
-import orderByReferences from '../../utils/orderByReferences'
+import orderByReferences from '../../Utils/orderByReferences'
 class ProductController {
     async index(request: Request, response: Response) {
         const { type } = request.query

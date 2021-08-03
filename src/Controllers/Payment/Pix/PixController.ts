@@ -4,7 +4,7 @@ import contentConnection from '../../../Database/connections/content/contentConn
 import tmpConnection from "../../../Database/connections/payment/tmpConnection";
 import PaymentCustomError from '../../../Errors/handlePaymentError';
 import PaymentGNAPI from '../../../Services/API/PaymentGNAPI';
-import RandomTxid from "../../../utils/txidGenerator";
+import RandomTxid from "../../../Utils/txidGenerator";
 class PixController {
     // Usar wildcards para validar os dados de pagamento vindo do request em src/middleware/payment/paymentDataValidator.ts
     async generatePixPayment(request: Request, response: Response) {

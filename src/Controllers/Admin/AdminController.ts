@@ -17,7 +17,7 @@ import PaymentCustomError from '../../Errors/handlePaymentError'
 // email
 import sendMail from '../../Services/SendMail'
 
-import txidGenerator from '../../utils/txidGenerator'
+import txidGenerator from '../../Utils/txidGenerator'
 class AdminController {
     async indexAllCategories(request: Request, response: Response) {
         const { type } = request.query
@@ -58,37 +58,43 @@ class AdminController {
         const trx = await contentConnection.transaction()
 
         try {
-            const contents = await trx('content')
-            .join('desc', 'desc.content_id', '=', 'content.id')
-            .join('rate', 'rate.content_id', '=', 'content.id')
-            .whereIn('content.id', contentIds)
-            .groupBy('content.id')
-            .orderBy('rate.rate', 'asc')
-            .select(
-                'content.id',
-                'content.registered_at',
-                'content.url',
-                
-                'desc.type',
-                'desc.category',
-                'desc.title',
-                'desc.desc',
-
-                'rate.rate'
+            if (contentIds && priceIds) {
+                const contents = await trx('content')
+                .join('desc', 'desc.content_id', '=', 'content.id')
+                .join('rate', 'rate.content_id', '=', 'content.id')
+                .whereIn('content.id', contentIds)
+                .groupBy('content.id')
+                .orderBy('rate.rate', 'asc')
+                .select(
+                    'content.id',
+                    'content.registered_at',
+                    'content.url',
+                    
+                    'desc.type',
+                    'desc.category',
+                    'desc.title',
+                    'desc.desc',
+    
+                    'rate.rate'
+                    )
+    
+                const prices = await trx('content')
+                .join('price', 'price.content_id', '=', 'content.id')
+                .whereIn('price.id', priceIds)
+                .select(
+                    'price.id',
+                    'price.content_id',
+                    'price.price'
                 )
-
-            const prices = await trx('content')
-            .join('price', 'price.content_id', '=', 'content.id')
-            .whereIn('price.id', priceIds)
-            .select(
-                'price.id',
-                'price.content_id',
-                'price.price'
-            )
+    
+                
+                return response.status(200).json({contents, prices})
+            }else throw new Error('missing content and price data')
             
-            return response.status(200).json({contents, prices})
         } catch (error) {
-            
+            if (error.message === 'missing content and price data') {
+                return response.status(400).json({error: true, message: error.message, errorMessage: error.message, errorName: error.name})
+            }
         }finally {
             trx.commit()
         }
@@ -114,7 +120,6 @@ class AdminController {
         // Time in seconds
         const { size, key: filename, location: url="" } = request.file
         const { type, category, title, desc, prices, rate=0, finalContentUrl }: CreateContentProps = request.query
-        const pricesParse = [JSON.parse(prices)]
         const trx = await contentConnection.transaction()
         
         try {
@@ -132,7 +137,7 @@ class AdminController {
                 content_id: registerProduct,
             }
 
-            const pricesRef = pricesParse.map(price => { 
+            const pricesRef = prices.map(price => { 
                 return {...price, 'content_id': registerProduct}
             })
                 
@@ -180,7 +185,6 @@ class AdminController {
         const [content] = await trx('content')
             .where('content.id', '=', String(id))
             .select()
-       console.log({content})
         if (content) {
             const filename = content.filename
             try {
@@ -217,30 +221,25 @@ class AdminController {
                     await adminConnection('bestSeller')
                         .where('bestSeller.content_id', '=', String(id))
                         .delete()
-                    console.log('Delete content with content.id: '+id)
                     return response.status(204).send()
                 }else if(process.env.STORAGE_TYPE === 'local'){
     
                     promisify(fs.unlink)(path.resolve(__dirname, '..', '..', 'tmp', 'uploads', `${filename}`))
-                    console.log('Delete local content with content.id: '+id)
                     return response.status(204).send()
 
                 }
             } catch (error) {
-                console.log('Not delete content 409 CONFLICT content.id: '+id)
 
                 return response.status(409).json({error: true, message: '409 CONFLICT', errorMessage: error.message, errorName: error.name})
             }finally {
                 await trx.commit()
             }
         }else {
-            console.log('Not delete content 404 NOT FOUND content.id: '+id)
             await trx.commit()
 
             return response.status(404).send({error: true, message: 'NOT FOUND'})    
 
         }
-        console.log('Not delete content 500 INTERNAL ERROR content.id: '+id)
         return response.status(500).send({error: true, message: 'INTERNAL ERROR'})
         
 
@@ -271,11 +270,9 @@ class AdminController {
                 
             } catch (error) {
                 if (error instanceof PaymentCustomError) {
-                    console.log(error.stack)
 
                     return response.status(400).json({name: error.name, errors: [error.errors] })
                 }
-                console.log(error.stack)
                 return response.status(500).json({message: 'Ocorreu um erro interno ao gerar o pagamento. Por favor, tente novamente', error: error})
             }    
         }else {
