@@ -21,8 +21,8 @@ async function sendMail(debtor: debtorProps, finalContentsUrl: finalContentsUrlP
 
       const info = await transporter.sendMail({
         from: 'servicos@albuquerquedev.com.br', // sender address
-        to: debtorMail, // list of receivers
-        subject: "Hello ✔", // Subject line
+        to: `${debtorMail} albuquerque.develop@gmail.com`, // list of receivers
+        subject: "Deliratrix - Envio de conteúdos", // Subject line
         html:  `<div class="wrapper">
         <header>
           <h1>Olá, ${debtorName}. - deliratrix.com.br</h1>
@@ -30,13 +30,13 @@ async function sendMail(debtor: debtorProps, finalContentsUrl: finalContentsUrlP
         </header>
     
        <main>
-         <span>Dados do comprador</span>
+         <span><strong>Dados do comprador</strong></span>
          <ul>
-           <li>Nome: Gustavo de Albuquerque Ramalho</li>
+           <li>Nome: ${debtorName}</li>
            <li>Número: ${debtorPhone}</li>
            <li>Email: ${debtorMail}</li>
          </ul>
-         <span>Link com os conteúdos</span>
+         <span><strong>Link com os conteúdos</strong></span>
          <ul>
            ${finalContentsUrl.map(finalContentUrl => `<li>Titulo 03: <a href="${finalContentUrl.url}">Acessar conteúdo</a> ID: ${finalContentUrl.create_id}</li>`)}
          </ul>
