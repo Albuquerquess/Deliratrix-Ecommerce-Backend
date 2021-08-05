@@ -10,7 +10,10 @@
     "knex:final": "knex migrate:latest --knexfile ./Knex/finalContentKnexfile.ts",
     "knex:admin": "knex migrate:latest --knexfile ./Knex/adminKnexfile.ts",
     "seed:admin": "npx knex seed:run --knexfile ./Knex/adminKnexfile.ts",
-    "build": "sucrase ./src -d ./dist --transforms typescript,imports"
+    "build": "sucrase ./src -d ./dist --transforms typescript,imports",
+    "copyFiles": "cp -r src/Database/DB/* dist/Database/DB/ && cp package.json dist/",
+    "postbuild": "npm run copyFiles",
+    "installProd": "npm install --production"
   },
   "keywords": [],
   "author": "",
@@ -29,6 +32,7 @@
     "@types/nodemailer": "^6.4.4",
     "@typescript-eslint/eslint-plugin": "^2.25.0",
     "@typescript-eslint/parser": "^2.25.0",
+    "copyfiles": "^2.4.1",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-config-standard": "^14.1.1",
@@ -41,12 +45,13 @@
     "nodemon": "^2.0.2",
     "npm": "^7.17.0",
     "prettier": "^2.0.2",
-    "sqlite3": "^5.0.2",
+    "@types/sqlite3": "^3.1.7",
     "sucrase": "^3.12.1",
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "@types/sqlite3": "^3.1.7",
+    "sqlite3": "^5.0.2",
+    
     "aws-sdk": "^2.930.0",
     "axios": "^0.21.1",
     "bluebird": "^3.7.2",
