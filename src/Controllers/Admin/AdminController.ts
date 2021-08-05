@@ -264,6 +264,9 @@ class AdminController {
                     .whereIn('create_id', contentIds)
                     .select('create_id', 'url')
 
+                const registerPaidPix = await tmpConnection('tmp_paid')
+                    .insert({txid: pix.txid})
+
                     const send = await sendMail(debtor, finalContentsUrl, contents)
 
                     return response.status(204).send()
@@ -278,8 +281,27 @@ class AdminController {
         }else {
             return response.send('200')
         
-        }    }
-
+        }
+    }
+    async PaymentConfirmation (request: Request, response: Response) {
+        const { txid } = request.query
+        
+        try {
+            const [isPaid] = await tmpConnection('tmp_paid')
+                .where('txid', '=', txid)
+    
+            if (isPaid) {
+                return response.status(200).json({error: false, paid: true})
+            }else {
+                return response.status(404).json({error: false, paid: false})
+            }
+            
+            
+        } catch (error) {
+            return response.status(500).send({error: true, message: 'INTERNAL ERROR'})
+            
+        }
+    }
     async uuidGenerate(request: Request, response: Response) {
         return response.status(200).send(txidGenerator())
         // enviar por email

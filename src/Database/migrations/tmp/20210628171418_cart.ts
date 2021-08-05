@@ -20,8 +20,11 @@ export async function up(knex: Knex): Promise<void> {
         table.foreign('debtor_id').references('id').inTable('debtor')
     })
     
+    .createTable('tmp_paid', (table: Knex.TableBuilder) => {
+        table.increments('id').primary()
+        table.string('txid').notNullable()
 
-    
+    })    
 }
 
 export async function down(knex: Knex): Promise<void> {

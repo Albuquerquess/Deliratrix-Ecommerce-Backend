@@ -21,5 +21,6 @@ AdminRoutes.delete('/admin/delete', adminController.delete)
 
 // webhoox
 AdminRoutes.post('/paid(/pix)?', adminController.Paid)
+AdminRoutes.get('/admin/paid/confirmed',adminController.PaymentConfirmation)
 
 export default AdminRoutes
