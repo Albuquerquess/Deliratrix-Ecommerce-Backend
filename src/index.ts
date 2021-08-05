@@ -9,11 +9,16 @@ import ContentRoutes from './Routes/Content'
 import AdminRoutes from './Routes/Admin'
 import PaymentGNAPI from './Routes/Payment'
 
+const corsOptions = {
+    origin: 'https://deliratrix.com.br/',
+    optionsSuccessStatus: 200
+}
+
 if (process.env.NODE_ENV === 'dev') dotenv.config()
 
 const app = express()
 
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(express.json())
 
 // Routes
