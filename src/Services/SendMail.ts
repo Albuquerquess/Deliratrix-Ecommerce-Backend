@@ -12,7 +12,7 @@ async function sendMail(debtor: debtorProps, finalContentsUrl: finalContentsUrlP
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_SERVER,
         port: process.env.SMTP_PORT,
-        secure: false, // true for 465, false for other ports
+        secure: false, 
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASSWD, 
