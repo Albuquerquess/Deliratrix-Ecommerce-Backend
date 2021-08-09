@@ -10,10 +10,14 @@
     "knex:final": "knex migrate:latest --knexfile ./Knex/finalContentKnexfile.ts",
     "knex:admin": "knex migrate:latest --knexfile ./Knex/adminKnexfile.ts",
     "seed:admin": "npx knex seed:run --knexfile ./Knex/adminKnexfile.ts",
-    "build": "sucrase ./src -d ./dist --transforms typescript,imports",
     "copyFiles": "cp -r src/Database/DB/* dist/Database/DB/ && cp package.json dist/",
-    "postbuild": "npm run copyFiles",
-    "installProd": "npm install --production"
+    "installProd": "npm install --production",
+    "deleteDatabase": "rm ./src/Database/DB/admin/adminDeliratrixDatabase.sqlite && rm ./src/Database/DB/content/contentDeliratrixDatabase.sqlite && rm ./src/Database/DB/finalContent/finalContentDeliratrixDatabase.sqlite && rm ./src/Database/DB/tmp/tmpDeliratrixDatabase.sqlite",
+    "createDatabase": "npm run knex:ecommerce && npm run knex:tmp && npm run knex:final && npm run knex:admin",
+    "insertSeeds": "npm run seed:admin",
+    "prebuild": "npm run deleteDatabase && npm run createDatabase && npm run insertSeeds",
+    "build": "sucrase ./src -d ./dist --transforms typescript,imports",
+    "postbuild": "npm run copyFiles"
   },
   "keywords": [],
   "author": "",
@@ -50,8 +54,6 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
-    "sqlite3": "^5.0.2",
-    
     "aws-sdk": "^2.930.0",
     "axios": "^0.21.1",
     "bluebird": "^3.7.2",
@@ -62,6 +64,7 @@
     "knex": "^0.95.6",
     "multer": "^1.4.2",
     "multer-s3": "^2.9.0",
-    "nodemailer": "^6.6.3"
+    "nodemailer": "^6.6.3",
+    "sqlite3": "^5.0.2"
   }
 }
