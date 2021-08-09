@@ -246,8 +246,10 @@ class AdminController {
 
     }
     async Paid(request: Request, response: Response) {
-        const pix: WebhookProps = request.body.pix[0]
-        if(pix) {
+        const pixData= request.body.pix
+        if(pixData) {
+            const pix: WebhookProps  = pixData[0]
+            console.log('Pagamento realizado pelo txid: ', pix.txid)
             try {
                 const debtor: {name: string, phone: string, email: string, txid: string} = 
                 await tmpConnection('tmp_debtor')
@@ -293,7 +295,7 @@ class AdminController {
             if (isPaid) {
                 return response.status(200).json({error: false, paid: true})
             }else {
-                return response.status(404).json({error: false, paid: false})
+                return response.status(200).json({error: false, paid: false})
             }
             
             
