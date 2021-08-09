@@ -37,7 +37,7 @@ class PixController {
               "original": finalPrice.toFixed(2)
             },
             "chave": process.env.GN_PIX_KEY,
-            "solicitacaoPagador": "Informe o número ou identificador do pedido."
+            "solicitacaoPagador": `Código de pagamento -> ${txid}`
           }
         
         try {
@@ -83,7 +83,6 @@ class PixController {
                 });
 
                 console.log('Pagamento cadastrado com txid: '+txid)
-
             return response.json({
                 chargeRaw: qrCode.data.qrcode,
                 qrcode: qrCode.data.imagemQrcode,
