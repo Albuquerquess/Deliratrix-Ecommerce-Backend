@@ -9,8 +9,9 @@ import ContentRoutes from './Routes/Content'
 import AdminRoutes from './Routes/Admin'
 import PaymentGNAPI from './Routes/Payment'
 
+
 const corsOptions = {
-    origin: 'https://deliratrix.com.br/',
+    origin: process.env.CORS_ORIGIN,
     optionsSuccessStatus: 200
 }
 
