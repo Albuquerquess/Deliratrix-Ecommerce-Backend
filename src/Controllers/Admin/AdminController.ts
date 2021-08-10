@@ -119,7 +119,7 @@ class AdminController {
     async create(request: Request, response: Response) {
         // Time in seconds
         const { size, key: filename, location: url="" } = request.file
-        const { type, category, title, desc, prices, rate=0, finalContentUrl }: CreateContentProps = request.query
+        const { type, category, title, desc, prices, rate=5, finalContentUrl }: CreateContentProps = request.query
         const trx = await contentConnection.transaction()
         
         try {
