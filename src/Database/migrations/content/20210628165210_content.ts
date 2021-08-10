@@ -34,7 +34,7 @@ export async function up(knex: Knex): Promise<void> {
 
     .createTable('rate', (table: Knex.TableBuilder) => {
         table.increments('id').primary()
-        table.integer('rate').defaultTo(0).notNullable()
+        table.integer('rate').defaultTo(5).notNullable()
         table.timestamp('registered_at').defaultTo(knex.fn.now())
         table.integer('content_id').notNullable()
 
