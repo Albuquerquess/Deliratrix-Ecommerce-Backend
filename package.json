@@ -15,7 +15,7 @@
     "deleteDatabase": "rm ./src/Database/DB/admin/adminDeliratrixDatabase.sqlite && rm ./src/Database/DB/content/contentDeliratrixDatabase.sqlite && rm ./src/Database/DB/finalContent/finalContentDeliratrixDatabase.sqlite && rm ./src/Database/DB/tmp/tmpDeliratrixDatabase.sqlite",
     "createDatabase": "npm run knex:ecommerce && npm run knex:tmp && npm run knex:final && npm run knex:admin",
     "insertSeeds": "npm run seed:admin",
-    "prebuild": "npm run deleteDatabase && npm run createDatabase && npm run insertSeeds",
+    "prebuild": "npm run deleteDatabase",
     "build": "sucrase ./src -d ./dist --transforms typescript,imports",
     "postbuild": "npm run copyFiles"
   },
