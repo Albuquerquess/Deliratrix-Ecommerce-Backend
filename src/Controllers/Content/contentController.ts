@@ -89,6 +89,7 @@ class ProductController {
             .select(
                 'content.id',
                 'content.registered_at',
+                'content.url',
                 'desc.type',
                 'desc.category',
                 'desc.title',

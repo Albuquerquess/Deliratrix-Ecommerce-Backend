@@ -38,7 +38,7 @@ async function sendMail(debtor: debtorProps, finalContentsUrl: finalContentsUrlP
          </ul>
          <span><strong>Link com os conteúdos</strong></span>
          <ul>
-           ${finalContentsUrl.map(finalContentUrl => `<li>Titulo 03: <a href="${finalContentUrl.url}">Acessar conteúdo</a> ID: ${finalContentUrl.create_id}</li>`)}
+           ${finalContentsUrl.map(finalContentUrl => `<a href="${finalContentUrl.url}">Acessar conteúdo</a> ID: ${finalContentUrl.create_id}</li>`)}
          </ul>
        </main>
       </div>`, // html body
