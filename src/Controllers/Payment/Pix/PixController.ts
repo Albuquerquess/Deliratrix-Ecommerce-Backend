@@ -22,19 +22,18 @@ class PixController {
         const contentIds = cartContentsRef.map(content => content.id)
         const priceIds = cartPrices.map(price => price.id)
 
-        const [price] = await contentConnection('price')
+        const price = await contentConnection('price')
         .whereIn('price.id', priceIds)
         .select('price.price')
 
-        const finalPrice = price.price
-              
-        
+        const finalPrice = price.reduce((acc, curr) => acc += curr.price, 0).toFixed(2)
+
         const dataCharge = {
             "calendario": {
               "expiracao": 3600
             },
             "valor": {
-              "original": finalPrice.toFixed(2)
+              "original": finalPrice
             },
             "chave": process.env.GN_PIX_KEY,
             "solicitacaoPagador": `Código de pagamento -> ${txid}`
