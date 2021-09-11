@@ -1,8 +1,9 @@
-import aws from 'aws-sdk'
 import { Request, Response } from 'express'
+import aws from 'aws-sdk'
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
+import chalk from 'chalk'
 // @types
 import { WebhookProps } from '../../@types/Admin'
 import { CreateContentProps, SelectMultiplesIdsProps } from '../../@types/content'
@@ -249,7 +250,7 @@ class AdminController {
         const pixData= request.body.pix
         if(pixData) {
             const pix: WebhookProps  = pixData[0]
-            console.log('Pagamento realizado pelo txid: ', pix.txid)
+            console.info(chalk.green('Pagamento realizado pelo txid: ', pix.txid))
             try {
                 const debtor: {name: string, phone: string, email: string, txid: string} = 
                 await tmpConnection('tmp_debtor')
@@ -307,6 +308,45 @@ class AdminController {
     async uuidGenerate(request: Request, response: Response) {
         return response.status(200).send(txidGenerator())
         // enviar por email
+    }
+    async loginValidate(request: Request, response: Response) {
+
+        const token = txidGenerator()
+        
+        try {
+            const basicToken = request.headers.authorization
+            if(!basicToken || basicToken.indexOf('Basic ') === -1) throw new Error('Missing Authorization Header')
+
+            const base64Credentials = basicToken.split(' ')[1]
+            const credentials = Buffer.from(base64Credentials, 'base64').toString('ascii')
+            const [username, password] = credentials.split(':')
+            
+            if (username === process.env.ADMIN_USER && password === String(process.env.ADMIN_PASSWORD)) {
+                return response.status(200).send({isAuth: true, token: token})
+            }else return response.status(401).json({isAuth: false, message: 'Invalid Authentication Credentials'})
+            
+        } catch (error) {
+            if (error.message === "Missing Authorization Header") {
+                return response.status(400).json({
+                    error: true,
+                    isAuth: false,
+                    message: error.message
+                })
+                
+            } else if (error.message === "Invalid Authentication Credentials") {
+                return response.status(401).json({
+                    error: true,
+                    isAuth: false,
+                    message: error.message
+                })
+                
+            } else {
+                return response.status(500).send({error: true, message: 'INTERNAL ERROR'})
+                
+            }            
+        }
+        
+        // return response.send(basicToken)
     }
 }
 

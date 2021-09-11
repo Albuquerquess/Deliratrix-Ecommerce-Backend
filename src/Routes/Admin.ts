@@ -19,7 +19,10 @@ AdminRoutes.post('/admin/create', multer(multerconfig).single('file'), adminCont
 
 AdminRoutes.delete('/admin/delete', adminController.delete)
 
-// webhoox
+// Authentication
+AdminRoutes.post('/admin/login', adminController.loginValidate)
+
+// webhook
 AdminRoutes.post('/paid(/pix)?', adminController.Paid)
 AdminRoutes.get('/admin/paid/confirmed',adminController.PaymentConfirmation)
 
