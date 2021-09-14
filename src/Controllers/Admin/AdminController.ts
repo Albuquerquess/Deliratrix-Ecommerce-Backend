@@ -3,7 +3,6 @@ import aws from 'aws-sdk'
 import fs from 'fs'
 import path from 'path'
 import { promisify } from 'util'
-import chalk from 'chalk'
 // @types
 import { WebhookProps } from '../../@types/Admin'
 import { CreateContentProps, SelectMultiplesIdsProps } from '../../@types/content'
@@ -120,7 +119,7 @@ class AdminController {
     async create(request: Request, response: Response) {
         // Time in seconds
         const { size, key: filename, location: url="" } = request.file
-        const { type, category, title, desc, prices, rate=5, finalContentUrl }: CreateContentProps = request.query
+        const { type, category, title, desc, prices, rate=5, finalContentUrl, duration=0 }: CreateContentProps = request.query
         const trx = await contentConnection.transaction()
         
         try {
@@ -149,6 +148,7 @@ class AdminController {
                     category,
                     title,
                     desc,
+                    time: duration,
                     'content_id': registerProduct
                 })
             await trx('price')
@@ -250,7 +250,7 @@ class AdminController {
         const pixData= request.body.pix
         if(pixData) {
             const pix: WebhookProps  = pixData[0]
-            console.info(chalk.green('Pagamento realizado pelo txid: ', pix.txid))
+            console.info('Pagamento realizado pelo txid: ', pix.txid)
             try {
                 const debtor: {name: string, phone: string, email: string, txid: string} = 
                 await tmpConnection('tmp_debtor')
